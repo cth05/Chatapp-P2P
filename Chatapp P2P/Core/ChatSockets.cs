@@ -49,9 +49,9 @@ namespace Chatapp_P2P.Core
             {
                 client = listener.AcceptTcpClient();
                 stream = client.GetStream();
+                code = Status.CONNECTED;
                 StatusChanged?.Invoke("Đã có máy kết nối tới");
                 StartReceiving();
-                code= Status.CONNECTED;
             }
             catch (Exception ex)
             {
@@ -131,6 +131,14 @@ namespace Chatapp_P2P.Core
                          ipProps.GetActiveUdpListeners().Any(p => p.Port == port);
 
             return !inUse;
+        }
+        public static int GetFreePort()
+        {
+            TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
         }
         public static string GetLocalIPv4()
         {

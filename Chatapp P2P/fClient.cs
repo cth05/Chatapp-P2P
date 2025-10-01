@@ -27,6 +27,7 @@ namespace Chatapp_P2P
             if (ipLocal == null)
                 return;
             txtIP.Text = ipLocal;
+            lbUser.Text = $"{Environment.UserName}@{Environment.MachineName}";
         }
 
         private async void btnConnect_Click(object sender, EventArgs e)

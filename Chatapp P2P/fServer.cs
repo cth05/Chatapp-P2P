@@ -15,6 +15,7 @@ namespace Chatapp_P2P
 {
     public partial class fServer : MaterialForm
     {
+        private bool isRunning = false;
         private ChatSockets server = new ChatSockets(true);
         public fServer()
         {
@@ -23,6 +24,13 @@ namespace Chatapp_P2P
 
         private async void btnListen_Click(object sender, EventArgs e)
         {
+            if (isRunning)
+            {
+                this.Text = $"TCP/IP Server";
+                btnListen.Text = "Listen";
+                isRunning= false;
+                return;
+            }
             if (!int.TryParse(txtPort.Text, out int port))
             {
                 MessageBox.Show("Port không đúng định dạng");return;
@@ -40,10 +48,13 @@ namespace Chatapp_P2P
                 MessageBox.Show("IP không đúng định dạng");return;
             }
             server.StartListening(ipAddress,port);
-            btnListen.Enabled = false;
             btnListen.Text = "Listening...";
-            while (server.GetStatus() == Status.DISCONNECTED)
+            isRunning = true;
+            this.Text = $"TCP/IP Server: Mở port {port}";
+            while (server.GetStatus() == Status.DISCONNECTED && isRunning)
                 await Task.Delay(1000);
+            if (server.GetStatus() == Status.DISCONNECTED || !isRunning)
+                return;
             fChat f = new fChat(server);
             f.Show();
             this.Hide();
@@ -55,11 +66,20 @@ namespace Chatapp_P2P
             if (ipLocal == null)
                 return;
             txtIP.Text = ipLocal;
+            lbUser.Text = $"{Environment.UserName}@{Environment.MachineName}";
         }
 
         private void fServer_FormClosing(object sender, FormClosingEventArgs e)
         {
             Environment.Exit(0);
+        }
+
+        private void btnSelectPortAvailable_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            int defaultPort = 9000;
+            int freePort = NetHelper.IsPortAvailable(defaultPort) ? defaultPort : NetHelper.GetFreePort();
+            if (freePort>0)
+                txtPort.Text = freePort.ToString();
         }
     }
 }
