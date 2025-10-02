@@ -16,6 +16,7 @@ namespace Chatapp_P2P
     public partial class fClient : MaterialForm
     {
         private ChatSockets server = new ChatSockets(false);
+        private string user= $"{Environment.UserName}@{Environment.MachineName}";
         public fClient()
         {
             InitializeComponent();
@@ -27,10 +28,10 @@ namespace Chatapp_P2P
             if (ipLocal == null)
                 return;
             txtIP.Text = ipLocal;
-            lbUser.Text = $"{Environment.UserName}@{Environment.MachineName}";
+            lbUser.Text = user;
         }
 
-        private async void btnConnect_Click(object sender, EventArgs e)
+        private void btnConnect_Click(object sender, EventArgs e)
         {
             if (!int.TryParse(txtPort.Text, out int port))
             {
@@ -44,14 +45,20 @@ namespace Chatapp_P2P
             {
                 MessageBox.Show("IP không đúng định dạng"); return;
             }
-            server.ConnectToPeer(ipAddress, port);
-            btnConnect.Enabled = false;
-            btnConnect.Text = "Connecting...";
-            while (server.GetStatus() == Status.DISCONNECTED)
-                await Task.Delay(1000);
-            fChat f = new fChat(server);
-            f.Show();
-            this.Hide();
+            try
+            {
+                btnConnect.Enabled = false;
+                btnConnect.Text = "Connecting...";
+                server.ConnectToPeer(ipAddress, port);
+                fChat f = new fChat(server, user);
+                f.Show();
+                this.Hide();
+            }
+            catch(Exception ex) {
+                MessageBox.Show(ex.Message);
+                btnConnect.Enabled = true;
+                btnConnect.Text = "Connect";
+            }
         }
 
         private void fClient_FormClosing(object sender, FormClosingEventArgs e)

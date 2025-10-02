@@ -17,6 +17,7 @@ namespace Chatapp_P2P
     {
         private bool isRunning = false;
         private ChatSockets server = new ChatSockets(true);
+        private string user = $"{Environment.UserName}@{Environment.MachineName}";
         public fServer()
         {
             InitializeComponent();
@@ -55,7 +56,7 @@ namespace Chatapp_P2P
                 await Task.Delay(1000);
             if (server.GetStatus() == Status.DISCONNECTED || !isRunning)
                 return;
-            fChat f = new fChat(server);
+            fChat f = new fChat(server, user);
             f.Show();
             this.Hide();
         }
@@ -66,7 +67,7 @@ namespace Chatapp_P2P
             if (ipLocal == null)
                 return;
             txtIP.Text = ipLocal;
-            lbUser.Text = $"{Environment.UserName}@{Environment.MachineName}";
+            lbUser.Text = user;
         }
 
         private void fServer_FormClosing(object sender, FormClosingEventArgs e)

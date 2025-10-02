@@ -7,11 +7,134 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-
+using Chatapp_P2P.Modal;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace Chatapp_P2P.Core
 {
     public class ChatSockets
+    {
+        public bool isServer { get; private set; }
+        private Thread listenThread;
+        private Thread receiveThread;
+        public event Action<string> MessageReceived;
+        public event Action<string> StatusChanged;
+        private Socket listenerSocket;
+        private Socket clientSocket;
+        public int port { get; private set; }
+        private Status code { get; set; }
+        public ChatSockets(bool isServer)
+        {
+            this.isServer = isServer;
+        }
+        public void StartListening(IPAddress ip, int port)
+        {
+            listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            listenerSocket.Bind(new IPEndPoint(ip, port));
+            listenerSocket.Listen(10);
+
+            listenThread = new Thread(AcceptClient);
+            listenThread.IsBackground = true;
+            listenThread.Start();
+
+            StatusChanged?.Invoke($"Đang lắng nghe trên port {port}");
+        }
+        private void AcceptClient()
+        {
+            try
+            {
+                clientSocket = listenerSocket.Accept();
+                code = Status.CONNECTED;
+                StatusChanged?.Invoke("Đã có máy kết nối tới");
+                StartReceiving();
+            }
+            catch (Exception ex)
+            {
+                StatusChanged?.Invoke("Lỗi Accept: " + ex.Message);
+            }
+        }
+        public void ConnectToPeer(IPAddress ipAddr, int port)
+        {
+            try
+            {
+                clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                clientSocket.Connect(new IPEndPoint(ipAddr, port));
+
+                StatusChanged?.Invoke("Kết nối thành công tới " + ipAddr + ":" + port);
+                StartReceiving();
+                code = Status.CONNECTED;
+                this.port = port;
+            }
+            catch (Exception ex)
+            {
+                StatusChanged?.Invoke("Lỗi kết nối: " + ex.Message);
+                throw;
+            }
+        }
+        private void StartReceiving()
+        {
+            receiveThread = new Thread(() =>
+            {
+                try
+                {
+                    while (true)
+                    {
+                        // đọc 4 byte độ dài
+                        byte[] lengthBytes = new byte[4];
+                        int read = clientSocket.Receive(lengthBytes, 0, 4, SocketFlags.None);
+                        if (read == 0) break; // mất kết nối
+
+                        int length = BitConverter.ToInt32(lengthBytes, 0);
+
+                        // đọc dữ liệu
+                        byte[] buffer = new byte[length];
+                        int totalRead = 0;
+                        while (totalRead < length)
+                        {
+                            int r = clientSocket.Receive(buffer, totalRead, length - totalRead, SocketFlags.None);
+                            if (r == 0) throw new Exception("Ngắt kết nối");
+                            totalRead += r;
+                        }
+
+                        string msg = Encoding.UTF8.GetString(buffer);
+                        MessageReceived?.Invoke(msg);
+                    }
+                }
+                catch
+                {
+                    StatusChanged?.Invoke("Ngắt kết nối");
+                }
+            });
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
+        }
+        public void SendMessage(string message)
+        {
+            if (clientSocket == null) return;
+
+            byte[] data = Encoding.UTF8.GetBytes(message);
+            byte[] lengthPrefix = BitConverter.GetBytes(data.Length);
+
+            clientSocket.Send(lengthPrefix);
+            clientSocket.Send(data);
+        }
+        public Status GetStatus()
+        {
+            return code;
+        }
+
+        public void Stop()
+        {
+            try
+            {
+                clientSocket?.Shutdown(SocketShutdown.Both);
+                clientSocket?.Close();
+                listenerSocket?.Close();
+            }
+            catch { }
+        }
+    }
+    public class ChatSocketLibTcp
     {
         public bool isServer { get;private set; }
         private TcpListener listener;
@@ -23,13 +146,9 @@ namespace Chatapp_P2P.Core
         public event Action<string> StatusChanged;
         public int port { get; private set; }
         private Status code { get; set; }
-        public ChatSockets(bool isServer)
+        public ChatSocketLibTcp(bool isServer)
         {
             this.isServer = isServer;
-        }
-        public Status GetStatus()
-        {
-            return code;
         }
         public void StartListening(IPAddress ip, int port)
         {
@@ -42,7 +161,6 @@ namespace Chatapp_P2P.Core
             listenThread.Start();
             StatusChanged?.Invoke($"Đang lắng nghe trên port {port}");
         }
-
         private void AcceptClient()
         {
             try
@@ -68,41 +186,55 @@ namespace Chatapp_P2P.Core
                 StatusChanged?.Invoke("Kết nối thành công tới " + ipAddr + ":" + port);
                 StartReceiving();
                 code= Status.CONNECTED;
+                this.port= port;
             }
             catch (Exception ex)
             {
                 StatusChanged?.Invoke("Lỗi kết nối: " + ex.Message);
+                throw ex;
             }
         }
         private void StartReceiving()
         {
             receiveThread = new Thread(() =>
             {
-                var reader = new StreamReader(stream, Encoding.UTF8);
                 while (true)
                 {
-                    try
+                    byte[] lengthBytes = new byte[4];
+                    int read = stream.Read(lengthBytes, 0, 4);
+                    if (read == 0) break; // mất kết nối
+
+                    int length = BitConverter.ToInt32(lengthBytes, 0);
+
+                    // đọc đúng số byte đã báo
+                    byte[] buffer = new byte[length];
+                    int totalRead = 0;
+                    while (totalRead < length)
                     {
-                        string msg = reader.ReadLine();
-                        if (msg == null) break;
-                        MessageReceived?.Invoke(msg);
+                        int r = stream.Read(buffer, totalRead, length - totalRead);
+                        if (r == 0) throw new Exception("Ngắt kết nối");
+                        totalRead += r;
                     }
-                    catch
-                    {
-                        break;
-                    }
+
+                    string msg = Encoding.UTF8.GetString(buffer);
+                    MessageReceived?.Invoke(msg);
                 }
-                StatusChanged?.Invoke("Ngắt kết nối");
             });
             receiveThread.IsBackground = true;
             receiveThread.Start();
         }
-
         public void SendMessage(string message)
         {
             if (stream == null) return;
-            var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
-            writer.WriteLine(message);
+            byte[] data = Encoding.UTF8.GetBytes(message);
+            // gửi 4 byte đầu là độ dài message
+            byte[] lengthPrefix = BitConverter.GetBytes(data.Length);
+            stream.Write(lengthPrefix, 0, lengthPrefix.Length);
+            stream.Write(data, 0, data.Length);
+        }
+        public Status GetStatus()
+        {
+            return code;
         }
 
         public void Stop()
