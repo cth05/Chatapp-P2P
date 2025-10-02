@@ -54,7 +54,7 @@ namespace Chatapp_P2P
             Panel bubble = new Panel
             {
                 Name = "bubble",
-                Tag = isSender, // dùng để biết căn trái/phải khi resize
+                Tag = isSender,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = new Padding(12),
