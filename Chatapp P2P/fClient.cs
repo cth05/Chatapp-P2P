@@ -15,11 +15,26 @@ namespace Chatapp_P2P
 {
     public partial class fClient : MaterialForm
     {
-        private ChatSockets server = new ChatSockets(false);
+        private ChatSockets socketClient = new ChatSockets(false);
         private string user= $"{Environment.UserName}@{Environment.MachineName}";
         public fClient()
         {
             InitializeComponent();
+            socketClient.StatusChanged += OnStatusReceived;
+        }
+        private void OnStatusReceived(string msg)
+        {
+            if (lbStatusChanged.GetCurrentParent().InvokeRequired)
+            {
+                lbStatusChanged.GetCurrentParent().Invoke(new Action(() =>
+                {
+                    lbStatusChanged.Text = msg;
+                }));
+            }
+            else
+            {
+                lbStatusChanged.Text = msg;
+            }
         }
 
         private void fClient_Load(object sender, EventArgs e)
@@ -49,8 +64,8 @@ namespace Chatapp_P2P
             {
                 btnConnect.Enabled = false;
                 btnConnect.Text = "Connecting...";
-                server.ConnectToPeer(ipAddress, port);
-                fChat f = new fChat(server, user);
+                socketClient.ConnectToPeer(ipAddress, port);
+                fChat f = new fChat(socketClient, user);
                 f.Show();
                 this.Hide();
             }

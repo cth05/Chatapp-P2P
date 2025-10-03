@@ -35,6 +35,9 @@
             this.btnConnect = new MaterialSkin.Controls.MaterialButton();
             this.materialLabel3 = new MaterialSkin.Controls.MaterialLabel();
             this.lbUser = new MaterialSkin.Controls.MaterialLabel();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lbStatusChanged = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // materialLabel1
@@ -120,11 +123,27 @@
             this.lbUser.Size = new System.Drawing.Size(1, 0);
             this.lbUser.TabIndex = 6;
             // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lbStatusChanged});
+            this.statusStrip1.Location = new System.Drawing.Point(3, 211);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(483, 22);
+            this.statusStrip1.TabIndex = 7;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lbStatusChanged
+            // 
+            this.lbStatusChanged.Name = "lbStatusChanged";
+            this.lbStatusChanged.Size = new System.Drawing.Size(0, 17);
+            // 
             // fClient
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(489, 207);
+            this.ClientSize = new System.Drawing.Size(489, 236);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.lbUser);
             this.Controls.Add(this.materialLabel3);
             this.Controls.Add(this.btnConnect);
@@ -136,6 +155,8 @@
             this.Text = "TCP/IP Client";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fClient_FormClosing);
             this.Load += new System.EventHandler(this.fClient_Load);
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -150,5 +171,7 @@
         private MaterialSkin.Controls.MaterialButton btnConnect;
         private MaterialSkin.Controls.MaterialLabel materialLabel3;
         private MaterialSkin.Controls.MaterialLabel lbUser;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lbStatusChanged;
     }
 }

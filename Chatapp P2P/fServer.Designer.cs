@@ -36,6 +36,9 @@
             this.lbUser = new MaterialSkin.Controls.MaterialLabel();
             this.materialLabel3 = new MaterialSkin.Controls.MaterialLabel();
             this.btnSelectPortAvailable = new System.Windows.Forms.LinkLabel();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lbStatusChanged = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnListen
@@ -133,11 +136,27 @@
             this.btnSelectPortAvailable.Text = "Chọn port trống";
             this.btnSelectPortAvailable.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.btnSelectPortAvailable_LinkClicked);
             // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lbStatusChanged});
+            this.statusStrip1.Location = new System.Drawing.Point(3, 205);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(483, 22);
+            this.statusStrip1.TabIndex = 13;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lbStatusChanged
+            // 
+            this.lbStatusChanged.Name = "lbStatusChanged";
+            this.lbStatusChanged.Size = new System.Drawing.Size(0, 17);
+            // 
             // fServer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(489, 211);
+            this.ClientSize = new System.Drawing.Size(489, 230);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnSelectPortAvailable);
             this.Controls.Add(this.lbUser);
             this.Controls.Add(this.materialLabel3);
@@ -150,6 +169,8 @@
             this.Text = "TCP/IP Server";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fServer_FormClosing);
             this.Load += new System.EventHandler(this.fServer_Load);
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -165,5 +186,7 @@
         private MaterialSkin.Controls.MaterialLabel lbUser;
         private MaterialSkin.Controls.MaterialLabel materialLabel3;
         private System.Windows.Forms.LinkLabel btnSelectPortAvailable;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lbStatusChanged;
     }
 }

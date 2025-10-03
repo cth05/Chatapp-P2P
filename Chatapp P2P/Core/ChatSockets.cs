@@ -19,6 +19,7 @@ namespace Chatapp_P2P.Core
         private Thread receiveThread;
         public event Action<string> MessageReceived;
         public event Action<string> StatusChanged;
+        public event Action<string> Ping;
         private Socket listenerSocket;
         private Socket clientSocket;
         public int port { get; private set; }
@@ -45,12 +46,14 @@ namespace Chatapp_P2P.Core
             {
                 clientSocket = listenerSocket.Accept();
                 code = Status.CONNECTED;
+                ConfigureSocket(clientSocket);
                 StatusChanged?.Invoke("Đã có máy kết nối tới");
+                Ping?.Invoke("connected");
                 StartReceiving();
             }
             catch (Exception ex)
             {
-                StatusChanged?.Invoke("Lỗi Accept: " + ex.Message);
+                StatusChanged?.Invoke("Đã xảy ra lỗi: " + ex.Message);
             }
         }
         public void ConnectToPeer(IPAddress ipAddr, int port)
@@ -59,17 +62,36 @@ namespace Chatapp_P2P.Core
             {
                 clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 clientSocket.Connect(new IPEndPoint(ipAddr, port));
-
+                ConfigureSocket(clientSocket);
                 StatusChanged?.Invoke("Kết nối thành công tới " + ipAddr + ":" + port);
+                Ping?.Invoke("connected");
                 StartReceiving();
                 code = Status.CONNECTED;
                 this.port = port;
             }
             catch (Exception ex)
             {
-                StatusChanged?.Invoke("Lỗi kết nối: " + ex.Message);
+                StatusChanged?.Invoke("Đã xảy ra lỗi: " + ex.Message);
                 throw;
             }
+        }
+        private void ConfigureSocket(Socket socket, uint keepAliveTimeMs = 5000, uint keepAliveIntervalMs = 2000)
+        {
+            // Bật TCP_NODELAY để gửi ngay, không gom gói
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
+
+            // Bật KeepAlive
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
+            // Cấu hình giá trị KeepAlive chi tiết (Idle time & Interval)
+            // [onoff(4)][keepalivetime(4)][keepaliveinterval(4)]
+            byte[] inOptionValues = new byte[12];
+            BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);              // bật keepalive
+            BitConverter.GetBytes(keepAliveTimeMs).CopyTo(inOptionValues, 4);      // idle time
+            BitConverter.GetBytes(keepAliveIntervalMs).CopyTo(inOptionValues, 8);  // interval
+
+            // SIO_KEEPALIVE_VALS = 0x98000004
+            socket.IOControl(IOControlCode.KeepAliveValues, inOptionValues, null);
         }
         private void StartReceiving()
         {
@@ -82,8 +104,12 @@ namespace Chatapp_P2P.Core
                         // đọc 4 byte độ dài
                         byte[] lengthBytes = new byte[4];
                         int read = clientSocket.Receive(lengthBytes, 0, 4, SocketFlags.None);
-                        if (read == 0) break; // mất kết nối
-
+                        if (read == 0) 
+                        {
+                            Ping?.Invoke("offline");
+                            break;
+                        } // mất kết nối
+                        Ping?.Invoke("online");
                         int length = BitConverter.ToInt32(lengthBytes, 0);
 
                         // đọc dữ liệu
@@ -100,9 +126,10 @@ namespace Chatapp_P2P.Core
                         MessageReceived?.Invoke(msg);
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
-                    StatusChanged?.Invoke("Ngắt kết nối");
+                    StatusChanged?.Invoke("Đã xảy ra lỗi: " + ex.Message);
+                    Ping?.Invoke("offline");
                 }
             });
             receiveThread.IsBackground = true;
@@ -114,9 +141,17 @@ namespace Chatapp_P2P.Core
 
             byte[] data = Encoding.UTF8.GetBytes(message);
             byte[] lengthPrefix = BitConverter.GetBytes(data.Length);
-
-            clientSocket.Send(lengthPrefix);
-            clientSocket.Send(data);
+            try
+            {
+                clientSocket.Send(lengthPrefix);
+                clientSocket.Send(data);
+                Ping?.Invoke("online");
+            }
+            catch(Exception ex)
+            {
+                Ping?.Invoke("offline");
+                throw ex;
+            }
         }
         public Status GetStatus()
         {
@@ -134,6 +169,7 @@ namespace Chatapp_P2P.Core
             catch { }
         }
     }
+    #region Using TcpClient,TcpListener
     public class ChatSocketLibTcp
     {
         public bool isServer { get;private set; }
@@ -248,6 +284,7 @@ namespace Chatapp_P2P.Core
             catch { }
         }
     }
+    #endregion
     public enum Status
     {
         DISCONNECTED,

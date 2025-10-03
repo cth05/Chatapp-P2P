@@ -21,8 +21,22 @@ namespace Chatapp_P2P
         public fServer()
         {
             InitializeComponent();
+            server.StatusChanged += OnStatusReceived;
         }
-
+        private void OnStatusReceived(string msg)
+        {
+            if (lbStatusChanged.GetCurrentParent().InvokeRequired)
+            {
+                lbStatusChanged.GetCurrentParent().Invoke(new Action(() =>
+                {
+                    lbStatusChanged.Text = msg;
+                }));
+            }
+            else
+            {
+                lbStatusChanged.Text = msg;
+            }
+        }
         private async void btnListen_Click(object sender, EventArgs e)
         {
             if (isRunning)
@@ -51,7 +65,7 @@ namespace Chatapp_P2P
             server.StartListening(ipAddress,port);
             btnListen.Text = "Listening...";
             isRunning = true;
-            this.Text = $"TCP/IP Server: Mở port {port}";
+            OnStatusReceived($"TCP/IP Server: Mở port {port}");
             while (server.GetStatus() == Status.DISCONNECTED && isRunning)
                 await Task.Delay(1000);
             if (server.GetStatus() == Status.DISCONNECTED || !isRunning)

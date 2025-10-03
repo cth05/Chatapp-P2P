@@ -36,8 +36,13 @@ namespace Chatapp_P2P
 
             flowMain.Padding = new Padding(0);
             flowMain.Margin = new Padding(0);
+
             this.chatSockets = socket;
             this.user = user;
+
+            chatSockets.MessageReceived += OnMessageReceived;
+            chatSockets.StatusChanged += OnStatusReceived;
+            chatSockets.Ping += PingStatusReceived;
         }
         private void AddMessage(string text, bool isSender)
         {
@@ -93,21 +98,64 @@ namespace Chatapp_P2P
             content.Controls.Add(lblTime);
             bubble.Controls.Add(content);
 
-            // áp dụng bo góc
             bubble.Paint += (s, e) => FormHelper.MakeRounded(bubble, 12);
 
             row.Controls.Add(bubble);
             flowMain.Controls.Add(row);
 
-            // cập nhật layout ngay khi thêm
             UpdateChatBubbleLayout();
 
-            // scroll tới tin mới
+            flowMain.ScrollControlIntoView(row);
+        }
+        private void AddSystemMessage(string text, bool isError = true)
+        {
+            if (flowMain.InvokeRequired)
+            {
+                // Nếu không ở UI thread thì dùng Invoke
+                flowMain.Invoke(new Action(() => AddSystemMessage(text, isError)));
+                return;
+            }
+            // Tạo row chứa system message
+            Panel row = new Panel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Top,
+                Width = flowMain.ClientSize.Width,
+                Padding = new Padding(0),
+                Margin = new Padding(0, 10, 0, 10),
+                Tag = "system"
+            };
+
+            Label lbl = new Label
+            {
+                Name = "lblSystem",
+                AutoSize = true,
+                MaximumSize = new Size(Math.Max(80, flowMain.ClientSize.Width - 120), 0),
+                Font = new Font("Segoe UI", 10, FontStyle.Italic),
+                ForeColor = isError ? Color.Red : Color.DimGray,
+                Text = text,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            row.Controls.Add(lbl);
+            flowMain.Controls.Add(row);
+
+            row.PerformLayout();
+            lbl.PerformLayout();
+
+            lbl.Left = Math.Max(0, (row.ClientSize.Width - lbl.Width) / 2);
+
+            row.SizeChanged += (s, e) =>
+            {
+                lbl.MaximumSize = new Size(Math.Max(80, flowMain.ClientSize.Width - 120), 0);
+                lbl.PerformLayout();
+                lbl.Left = Math.Max(0, (row.ClientSize.Width - lbl.Width) / 2);
+            };
             flowMain.ScrollControlIntoView(row);
         }
         private void UpdateChatBubbleLayout()
         {
-            // đảm bảo chạy trên UI thread
             if (flowMain.InvokeRequired)
             {
                 flowMain.Invoke(new Action(UpdateChatBubbleLayout));
@@ -117,47 +165,50 @@ namespace Chatapp_P2P
             flowMain.SuspendLayout();
             try
             {
-                // khoảng cách 2 bên
                 int sidePadding = 15;
-                // giới hạn chiều ngang tối đa cho bubble
                 int bubbleMaxWidth = Math.Max(120, flowMain.ClientSize.Width - 120);
 
-                // duyệt tất cả các 'row' trong flowMain
                 foreach (Control row in flowMain.Controls.OfType<Control>().ToArray())
                 {
-                    // đồng bộ chiều rộng row với flowMain
                     row.Width = flowMain.ClientSize.Width;
 
                     if (row.Controls.Count == 0) continue;
                     var bubble = row.Controls[0];
 
-                    // cập nhật maximum size cho bubble
                     bubble.MaximumSize = new Size(bubbleMaxWidth, int.MaxValue);
 
-                    // tìm content (FlowLayoutPanel) và label message để cập nhật MaximumSize
                     var content = bubble.Controls.OfType<FlowLayoutPanel>().FirstOrDefault();
                     if (content != null)
                     {
                         var lblMessage = content.Controls.OfType<Label>().FirstOrDefault(l => l.Name == "lblMessage");
                         if (lblMessage != null)
                         {
-                            // trừ padding của bubble để label wrap chính xác
                             int usable = bubbleMaxWidth - bubble.Padding.Horizontal - 20;
                             lblMessage.MaximumSize = new Size(Math.Max(80, usable), 0);
                         }
 
-                        // (tuỳ chọn) đảm bảo lblTime không quá rộng
                         var lblTime = content.Controls.OfType<Label>().FirstOrDefault(l => l.Name == "lblTime");
                         if (lblTime != null)
                         {
                             lblTime.MaximumSize = new Size(bubbleMaxWidth - bubble.Padding.Horizontal, 0);
                         }
+                        
+                        var lbSystem = content.Controls.OfType<Label>().FirstOrDefault(l => l.Name == "lblSystem");
+                        if (lbSystem != null)
+                        {
+                            lbSystem.MaximumSize = new Size(Math.Max(80, flowMain.ClientSize.Width - 120), 0);
+
+                            // ép layout để có kích thước chính xác
+                            lbSystem.PerformLayout();
+                            row.PerformLayout();
+
+                            lbSystem.Left = Math.Max(0, (row.ClientSize.Width - lbSystem.Width) / 2);
+                        }
+
                     }
 
-                    // ép layout để kích thước thực tế của bubble được tính lại
                     bubble.PerformLayout();
 
-                    // đặt vị trí trái hoặc phải cho bubble
                     bool isSender = bubble.Tag is bool b && b;
                     int x = isSender ? Math.Max(0, row.ClientSize.Width - bubble.Width - sidePadding) : sidePadding;
                     bubble.Location = new Point(x, bubble.Location.Y);
@@ -170,10 +221,8 @@ namespace Chatapp_P2P
         }
         private void fChat_Load(object sender, EventArgs e)
         {
-            chatSockets.MessageReceived += OnMessageReceived;
-            chatSockets.StatusChanged += OnStatusReceived;
             string info = chatSockets.isServer ? "Server" : "Client";
-            this.Text = $"{info} - Port: {chatSockets.port}";
+            this.Text = $"{info}:{user} - Port: {chatSockets.port}";
         }
         private void OnMessageReceived(string msg)
         {
@@ -187,17 +236,26 @@ namespace Chatapp_P2P
             {
                 AddMessage(obj.Message, false);
                 this.Text = obj.From;
-            }    
+            }
         }
         private void OnStatusReceived(string msg)
         {
-            
+            AddSystemMessage(msg, false);
         }
+        private void PingStatusReceived(string status)
+        {
+            string msg = status == "online" ? "● Đã kết nối" : "● Mất kết nối";
+            this.BeginInvoke(new Action(() =>
+            {
+                lbPingStatus.Text = msg;
+                lbPingStatus.ForeColor = status == "online" ? Color.Green : Color.Red;
+            }));
+        }
+
         private void fChat_FormClosing(object sender, FormClosingEventArgs e)
         {
             Environment.Exit(0);
         }
-
         private void btnSend_Click(object sender, EventArgs e)
         {
             string text = txtMessage.Text;
@@ -211,9 +269,16 @@ namespace Chatapp_P2P
                 Message = text,
             };
             txtMessage.Text = "";
-            AddMessage(text, true);
             string rawMsgSend = JsonConvert.SerializeObject(msgObj, Formatting.None);
-            chatSockets.SendMessage(rawMsgSend);
+            try
+            {
+                chatSockets.SendMessage(rawMsgSend);
+                AddMessage(text, true);
+            }
+            catch (Exception ex)
+            {
+                AddSystemMessage($"❌ Không gửi được tin nhắn! Lỗi: {ex.Message}", true);
+            }
         }
     }
     public class FormHelper
