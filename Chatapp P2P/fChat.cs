@@ -14,6 +14,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Chatapp_P2P
 {
@@ -22,6 +24,7 @@ namespace Chatapp_P2P
         private readonly MaterialSkinManager materialSkinManager;
         private ChatSockets chatSockets;
         private string user;
+        private bool isReady = false;
         public fChat(ChatSockets socket, string user)
         {
             InitializeComponent();
@@ -152,6 +155,7 @@ namespace Chatapp_P2P
                 lbl.PerformLayout();
                 lbl.Left = Math.Max(0, (row.ClientSize.Width - lbl.Width) / 2);
             };
+            UpdateChatBubbleLayout();
             flowMain.ScrollControlIntoView(row);
         }
         private void UpdateChatBubbleLayout()
@@ -223,6 +227,29 @@ namespace Chatapp_P2P
         {
             string info = chatSockets.isServer ? "Server" : "Client";
             this.Text = $"{info}:{user} - Port: {chatSockets.port}";
+            if(chatSockets.isServer)
+            {
+                string pubKey = CryptoHelper.GetPublicKey();
+                var keyMsg = new ChatMessage
+                {
+                    Type = "key-exchange",
+                    From = user,
+                    Message = pubKey
+                };
+                try
+                {
+                    chatSockets.SendMessage(JsonConvert.SerializeObject(keyMsg));
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        lbPingStatus.Text = "Gửi PublicKey";
+                        lbPingStatus.ForeColor = Color.Black;
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    AddSystemMessage($"Trao đổi key thất bại! Lỗi: {ex.Message}", true);
+                }
+            }
         }
         private void OnMessageReceived(string msg)
         {
@@ -231,11 +258,63 @@ namespace Chatapp_P2P
                 Invoke(new Action(() => OnMessageReceived(msg)));
                 return;
             }
-            ChatMessage obj = JsonConvert.DeserializeObject<ChatMessage>(msg);
-            if (obj.Type == "chat")
+            try
             {
-                AddMessage(obj.Message, false);
-                this.Text = obj.From;
+                var obj = JsonConvert.DeserializeObject<ChatMessage>(msg);
+                if (obj == null) return;
+                if (obj.Type == "chat")
+                {
+                    string plain = CryptoHelper.Decrypt(obj.Message);
+                    AddMessage(plain, false);
+                }
+                else if (obj.Type == "key-exchange" && !CryptoHelper.IsReady && !chatSockets.isServer)
+                {
+                    // Nhận publicKey, gen sessionKey
+                    CryptoHelper.ImportRemotePublicKey(obj.Message);
+                    var keyMsg = new ChatMessage
+                    {
+                        Type = "session-key",
+                        From = user,
+                        Message = CryptoHelper.EncryptedSessionKey
+                    };
+                    chatSockets.SendMessage(JsonConvert.SerializeObject(keyMsg));
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        lbPingStatus.Text = "🔑 Client End-to-End Encryption Ready!";
+                        lbPingStatus.ForeColor = Color.Black;
+                    }));
+                }
+                else if (obj.Type == "session-key" && !CryptoHelper.IsReady && chatSockets.isServer)
+                {
+                    string encSessionKey = obj.Message;
+                    CryptoHelper.ImportEncryptedSessionKey(encSessionKey);
+                    var keyMsg = new ChatMessage
+                    {
+                        Type = "system",
+                        From = user,
+                        Message = "ready"
+                    };
+                    chatSockets.SendMessage(JsonConvert.SerializeObject(keyMsg));
+                    isReady = true;
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        lbPingStatus.Text = "🔑 Server End-to-End Encryption Ready!";
+                        lbPingStatus.ForeColor = Color.Black;
+                    }));
+                }
+                else if (obj.Type == "system" && CryptoHelper.IsReady && !chatSockets.isServer)
+                {
+                    this.isReady = obj.Message == "ready";
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        lbPingStatus.Text = "🔑 Client End-to-End Encryption Ready (Server)!";
+                        lbPingStatus.ForeColor = Color.Black;
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                AddMessage($"[Error] {ex.Message}", false);
             }
         }
         private void OnStatusReceived(string msg)
@@ -251,7 +330,6 @@ namespace Chatapp_P2P
                 lbPingStatus.ForeColor = status == "online" ? Color.Green : Color.Red;
             }));
         }
-
         private void fChat_FormClosing(object sender, FormClosingEventArgs e)
         {
             Environment.Exit(0);
@@ -261,12 +339,13 @@ namespace Chatapp_P2P
             string text = txtMessage.Text;
             if (string.IsNullOrEmpty(text))
                 return;
+            string enc = CryptoHelper.Encrypt(text);
             ChatMessage msgObj = new ChatMessage
             {
                 Type = "chat",
                 From = user,
                 To = "",
-                Message = text,
+                Message = enc,
             };
             txtMessage.Text = "";
             string rawMsgSend = JsonConvert.SerializeObject(msgObj, Formatting.None);

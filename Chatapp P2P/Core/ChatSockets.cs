@@ -32,12 +32,11 @@ namespace Chatapp_P2P.Core
         {
             listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             listenerSocket.Bind(new IPEndPoint(ip, port));
-            listenerSocket.Listen(10);
-
+            listenerSocket.Listen(1);
+            this.port = port;
             listenThread = new Thread(AcceptClient);
             listenThread.IsBackground = true;
             listenThread.Start();
-
             StatusChanged?.Invoke($"Đang lắng nghe trên port {port}");
         }
         private void AcceptClient()

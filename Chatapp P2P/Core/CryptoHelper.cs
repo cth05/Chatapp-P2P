@@ -28,7 +28,7 @@ namespace Chatapp_P2P.Core
             var param = JsonConvert.DeserializeObject<RSAParameters>(json);
             var rsaRemote = RSA.Create();
             rsaRemote.ImportParameters(param);
-
+            ready = true;
             SessionKey = RandomBytes(32);
             var enc = rsaRemote.Encrypt(SessionKey, RSAEncryptionPadding.OaepSHA1);
             EncryptedSessionKey = Convert.ToBase64String(enc);
