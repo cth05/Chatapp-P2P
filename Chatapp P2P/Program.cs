@@ -16,7 +16,7 @@ namespace Chatapp_P2P
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new fClient());
+            Application.Run(new fServer());
         }
     }
 }

@@ -31,9 +31,9 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnSend = new MaterialSkin.Controls.MaterialButton();
             this.txtMessage = new MaterialSkin.Controls.MaterialMultiLineTextBox();
-            this.flowMain = new System.Windows.Forms.FlowLayoutPanel();
-            this.lbPingStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lbPingStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.flowMain = new System.Windows.Forms.FlowLayoutPanel();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -84,6 +84,23 @@
             this.txtMessage.Size = new System.Drawing.Size(479, 51);
             this.txtMessage.TabIndex = 1;
             this.txtMessage.Text = "";
+            this.txtMessage.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtMessage_KeyDown);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lbPingStatus});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 51);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(479, 22);
+            this.statusStrip1.TabIndex = 0;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lbPingStatus
+            // 
+            this.lbPingStatus.Name = "lbPingStatus";
+            this.lbPingStatus.Size = new System.Drawing.Size(0, 17);
             // 
             // flowMain
             // 
@@ -96,22 +113,6 @@
             this.flowMain.Size = new System.Drawing.Size(479, 381);
             this.flowMain.TabIndex = 1;
             this.flowMain.WrapContents = false;
-            // 
-            // lbPingStatus
-            // 
-            this.lbPingStatus.Name = "lbPingStatus";
-            this.lbPingStatus.Size = new System.Drawing.Size(0, 17);
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lbPingStatus});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 51);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(479, 22);
-            this.statusStrip1.TabIndex = 0;
-            this.statusStrip1.Text = "statusStrip1";
             // 
             // fChat
             // 

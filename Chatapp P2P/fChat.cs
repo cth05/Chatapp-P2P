@@ -295,7 +295,7 @@ namespace Chatapp_P2P
                         Message = "ready"
                     };
                     chatSockets.SendMessage(JsonConvert.SerializeObject(keyMsg));
-                    isReady = true;
+                    this.isReady = true;
                     this.BeginInvoke(new Action(() =>
                     {
                         lbPingStatus.Text = "🔑 Server End-to-End Encryption Ready!";
@@ -305,11 +305,6 @@ namespace Chatapp_P2P
                 else if (obj.Type == "system" && CryptoHelper.IsReady && !chatSockets.isServer)
                 {
                     this.isReady = obj.Message == "ready";
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        lbPingStatus.Text = "🔑 Client End-to-End Encryption Ready (Server)!";
-                        lbPingStatus.ForeColor = Color.Black;
-                    }));
                 }
             }
             catch (Exception ex)
@@ -336,6 +331,10 @@ namespace Chatapp_P2P
         }
         private void btnSend_Click(object sender, EventArgs e)
         {
+            SendMessage();
+        }
+        private void SendMessage()
+        {
             string text = txtMessage.Text;
             if (string.IsNullOrEmpty(text))
                 return;
@@ -347,7 +346,6 @@ namespace Chatapp_P2P
                 To = "",
                 Message = enc,
             };
-            txtMessage.Text = "";
             string rawMsgSend = JsonConvert.SerializeObject(msgObj, Formatting.None);
             try
             {
@@ -357,6 +355,29 @@ namespace Chatapp_P2P
             catch (Exception ex)
             {
                 AddSystemMessage($"❌ Không gửi được tin nhắn! Lỗi: {ex.Message}", true);
+            }
+            finally
+            {
+                txtMessage.Invoke((MethodInvoker)delegate
+                {
+                    txtMessage.Text = "";
+                });
+            }
+        }
+
+        private void txtMessage_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter && e.Shift)
+            {
+                int pos = txtMessage.SelectionStart;
+                txtMessage.Text = txtMessage.Text.Insert(pos, Environment.NewLine);
+                txtMessage.SelectionStart = pos + Environment.NewLine.Length;
+                e.SuppressKeyPress = true;
+            }
+            else if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                SendMessage();
             }
         }
     }
