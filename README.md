@@ -49,7 +49,7 @@
 
 1. Clone repository này về máy:
 ```bash
-git clone <https://github.com/cth05/Chatapp-P2P>
+git clone https://github.com/cth05/Chatapp-P2P.git
 ```
 
 2. Mở solution trong Visual Studio
