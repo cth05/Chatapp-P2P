@@ -131,7 +131,6 @@ namespace Chatapp_P2P
             Label lbl = new Label
             {
                 Name = "lblSystem",
-                Tag = "labelSystem",
                 AutoSize = true,
                 MaximumSize = new Size(Math.Max(80, flowMain.ClientSize.Width - 120), 0),
                 Font = new Font("Segoe UI", 10, FontStyle.Italic),
