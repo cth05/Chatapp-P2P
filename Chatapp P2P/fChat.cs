@@ -58,7 +58,6 @@ namespace Chatapp_P2P
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
-
             Panel bubble = new Panel
             {
                 Name = "bubble",
@@ -67,7 +66,7 @@ namespace Chatapp_P2P
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = new Padding(12),
                 Margin = new Padding(8),
-                BackColor = isSender ? Color.LightSkyBlue : Color.LightGray,
+                BackColor = (isSender ? Color.LightSkyBlue : Color.LightGray),
                 MaximumSize = new Size(Math.Max(120, flowMain.ClientSize.Width - 120), 0)
             };
             FlowLayoutPanel content = new FlowLayoutPanel
@@ -83,7 +82,7 @@ namespace Chatapp_P2P
                 Name = "lblMessage",
                 AutoSize = true,
                 MaximumSize = new Size(bubble.MaximumSize.Width - bubble.Padding.Horizontal - 20, 0),
-                Font = new Font("Segoe UI", 12, FontStyle.Regular),
+                Font = new Font("Segoe UI", 12f, FontStyle.Regular),
                 ForeColor = Color.Black,
                 Text = text
             };
@@ -91,7 +90,7 @@ namespace Chatapp_P2P
             {
                 Name = "lblTime",
                 AutoSize = true,
-                Font = new Font("Segoe UI", 9, FontStyle.Italic),
+                Font = new Font("Segoe UI", 9f, FontStyle.Italic),
                 ForeColor = Color.DimGray,
                 Text = DateTime.Now.ToString("HH:mm"),
                 Margin = new Padding(0, 5, 0, 0),
@@ -100,14 +99,13 @@ namespace Chatapp_P2P
             content.Controls.Add(lblMessage);
             content.Controls.Add(lblTime);
             bubble.Controls.Add(content);
-
-            bubble.Paint += (s, e) => FormHelper.MakeRounded(bubble, 12);
-
+            bubble.Paint += delegate
+            {
+                FormHelper.MakeRounded(bubble, 12);
+            };
             row.Controls.Add(bubble);
             flowMain.Controls.Add(row);
-
             UpdateChatBubbleLayout();
-
             flowMain.ScrollControlIntoView(row);
         }
         private void AddSystemMessage(string text, bool isError = true)
@@ -133,6 +131,7 @@ namespace Chatapp_P2P
             Label lbl = new Label
             {
                 Name = "lblSystem",
+                Tag = "labelSystem",
                 AutoSize = true,
                 MaximumSize = new Size(Math.Max(80, flowMain.ClientSize.Width - 120), 0),
                 Font = new Font("Segoe UI", 10, FontStyle.Italic),
@@ -178,7 +177,6 @@ namespace Chatapp_P2P
 
                     if (row.Controls.Count == 0) continue;
                     var bubble = row.Controls[0];
-
                     bubble.MaximumSize = new Size(bubbleMaxWidth, int.MaxValue);
 
                     var content = bubble.Controls.OfType<FlowLayoutPanel>().FirstOrDefault();
@@ -196,7 +194,7 @@ namespace Chatapp_P2P
                         {
                             lblTime.MaximumSize = new Size(bubbleMaxWidth - bubble.Padding.Horizontal, 0);
                         }
-                        
+
                         var lbSystem = content.Controls.OfType<Label>().FirstOrDefault(l => l.Name == "lblSystem");
                         if (lbSystem != null)
                         {

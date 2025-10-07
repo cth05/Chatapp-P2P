@@ -76,7 +76,7 @@
     <Compile Include="fServer.Designer.cs">
       <DependentUpon>fServer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Modal\ChatMessage.cs" />
+    <Compile Include="Model\ChatMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="fChat.resx">

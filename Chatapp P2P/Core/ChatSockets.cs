@@ -47,7 +47,6 @@ namespace Chatapp_P2P.Core
                 code = Status.CONNECTED;
                 ConfigureSocket(clientSocket);
                 StatusChanged?.Invoke("Đã có máy kết nối tới");
-                Ping?.Invoke("connected");
                 StartReceiving();
             }
             catch (Exception ex)
@@ -63,7 +62,6 @@ namespace Chatapp_P2P.Core
                 clientSocket.Connect(new IPEndPoint(ipAddr, port));
                 ConfigureSocket(clientSocket);
                 StatusChanged?.Invoke("Kết nối thành công tới " + ipAddr + ":" + port);
-                Ping?.Invoke("connected");
                 StartReceiving();
                 code = Status.CONNECTED;
                 this.port = port;
@@ -108,9 +106,7 @@ namespace Chatapp_P2P.Core
                             Ping?.Invoke("offline");
                             break;
                         } // mất kết nối
-                        Ping?.Invoke("online");
                         int length = BitConverter.ToInt32(lengthBytes, 0);
-
                         // đọc dữ liệu
                         byte[] buffer = new byte[length];
                         int totalRead = 0;
@@ -122,6 +118,8 @@ namespace Chatapp_P2P.Core
                         }
 
                         string msg = Encoding.UTF8.GetString(buffer);
+                        if (JsonConvert.DeserializeObject<ChatMessage>(msg).Type == "chat")
+                            Ping?.Invoke("online");
                         MessageReceived?.Invoke(msg);
                     }
                 }
