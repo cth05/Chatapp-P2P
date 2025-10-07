@@ -71,6 +71,7 @@
             // 
             // txtIP
             // 
+            this.txtIP.Enabled = false;
             this.txtIP.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtIP.Location = new System.Drawing.Point(122, 122);
             this.txtIP.Name = "txtIP";

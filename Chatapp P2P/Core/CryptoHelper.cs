@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Chatapp_P2P.Core
 {
@@ -84,7 +86,7 @@ namespace Chatapp_P2P.Core
             System.Diagnostics.Debug.WriteLine("Encrypt IV: " + Convert.ToBase64String(iv));
             System.Diagnostics.Debug.WriteLine("Encrypt Cipher: " + Convert.ToBase64String(cipher));
             System.Diagnostics.Debug.WriteLine("Encrypt MAC: " + Convert.ToBase64String(mac));
-
+            System.Diagnostics.Debug.WriteLine("===========================");
             return ToB64(iv, cipher, mac);
         }
 
@@ -100,11 +102,15 @@ namespace Chatapp_P2P.Core
                 var iv = parts[0];
                 var cipher = parts[1];
                 var mac = parts[2];
-
+                System.Diagnostics.Debug.WriteLine($"IV (Base64): {Convert.ToBase64String(iv)}");
+                System.Diagnostics.Debug.WriteLine($"Cipher (Base64): {Convert.ToBase64String(cipher)}");
+                System.Diagnostics.Debug.WriteLine($"MAC (Base64): {Convert.ToBase64String(mac)}");
                 using (var hmac = new HMACSHA256(SessionKey))
                 {
                     var check = hmac.ComputeHash(iv.Concat(cipher).ToArray());
-                    if (!check.SequenceEqual(mac))
+                    bool isMatch = check.SequenceEqual(mac);
+                    System.Diagnostics.Debug.WriteLine($"HMAC hợp lệ: {isMatch}");
+                    if (!isMatch)
                         throw new CryptographicException("HMAC check failed!");
                 }
 
@@ -120,7 +126,10 @@ namespace Chatapp_P2P.Core
                     using (var decryptor = aes.CreateDecryptor())
                     {
                         byte[] plain = decryptor.TransformFinalBlock(cipher, 0, cipher.Length);
-                        return Encoding.UTF8.GetString(plain);
+                        string text = Encoding.UTF8.GetString(plain);
+                        System.Diagnostics.Debug.WriteLine($"Plain text: {text}");
+                        System.Diagnostics.Debug.WriteLine("===========================");
+                        return text;
                     }
                 }
             }

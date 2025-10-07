@@ -62,7 +62,7 @@ namespace Chatapp_P2P
             {
                 MessageBox.Show("IP không đúng định dạng");return;
             }
-            server.StartListening(ipAddress,port);
+            server.StartListening(port);
             btnListen.Text = "Listening...";
             isRunning = true;
             OnStatusReceived($"TCP/IP Server: Mở port {port}");

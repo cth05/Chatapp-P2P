@@ -28,10 +28,10 @@ namespace Chatapp_P2P.Core
         {
             this.isServer = isServer;
         }
-        public void StartListening(IPAddress ip, int port)
+        public void StartListening(int port)
         {
             listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listenerSocket.Bind(new IPEndPoint(ip, port));
+            listenerSocket.Bind(new IPEndPoint(IPAddress.Any, port));
             listenerSocket.Listen(1);
             this.port = port;
             listenThread = new Thread(AcceptClient);
