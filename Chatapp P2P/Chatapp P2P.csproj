@@ -36,8 +36,8 @@
     <StartupObject>Chatapp_P2P.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MaterialSkin, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MaterialSkin.2.2.3.1\lib\net461\MaterialSkin.dll</HintPath>
+    <Reference Include="AntdUI, Version=2.1.8.0, Culture=neutral, PublicKeyToken=0e24e5118ea3d6af, processorArchitecture=MSIL">
+      <HintPath>..\packages\AntdUI.2.1.8\lib\net46\AntdUI.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -58,35 +58,36 @@
   <ItemGroup>
     <Compile Include="Core\ChatSockets.cs" />
     <Compile Include="Core\CryptoHelper.cs" />
-    <Compile Include="fChat.cs">
+    <Compile Include="fConnect.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="fChat.Designer.cs">
-      <DependentUpon>fChat.cs</DependentUpon>
+    <Compile Include="fConnect.Designer.cs">
+      <DependentUpon>fConnect.cs</DependentUpon>
     </Compile>
-    <Compile Include="fClient.cs">
+    <Compile Include="fGetPortOpen.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="fClient.Designer.cs">
-      <DependentUpon>fClient.cs</DependentUpon>
+    <Compile Include="fGetPortOpen.Designer.cs">
+      <DependentUpon>fGetPortOpen.cs</DependentUpon>
     </Compile>
-    <Compile Include="fServer.cs">
+    <Compile Include="fMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="fServer.Designer.cs">
-      <DependentUpon>fServer.cs</DependentUpon>
+    <Compile Include="fMain.Designer.cs">
+      <DependentUpon>fMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helper\ImageHelper.cs" />
     <Compile Include="Model\ChatMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="fChat.resx">
-      <DependentUpon>fChat.cs</DependentUpon>
+    <EmbeddedResource Include="fConnect.resx">
+      <DependentUpon>fConnect.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="fClient.resx">
-      <DependentUpon>fClient.cs</DependentUpon>
+    <EmbeddedResource Include="fGetPortOpen.resx">
+      <DependentUpon>fGetPortOpen.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="fServer.resx">
-      <DependentUpon>fServer.cs</DependentUpon>
+    <EmbeddedResource Include="fMain.resx">
+      <DependentUpon>fMain.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -96,6 +97,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -111,6 +113,5 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
