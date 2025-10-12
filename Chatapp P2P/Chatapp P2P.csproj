@@ -57,7 +57,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\ChatSockets.cs" />
-    <Compile Include="Core\CryptoHelper.cs" />
     <Compile Include="fConnect.cs">
       <SubType>Form</SubType>
     </Compile>
