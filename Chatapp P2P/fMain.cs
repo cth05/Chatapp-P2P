@@ -116,6 +116,7 @@ namespace Chatapp_P2P
                     var existingUser = userChatList.Keys.FirstOrDefault(u => u.Id == obj.From.Id);
                     ChatList chatlist = userChatList[existingUser];
                     chatlist.AddToBottom(new TextChatItem(obj.Message, Resources._464760996_1254146839119862_3605321457742435801_n, from.Name));
+                    NotifyMessage(from.Name, $"{from.Name}: {obj.Message}");
                     var item = msgList.Items.FirstOrDefault(i => i.ID == from.Id);
                     if (item != null)
                     {
@@ -144,6 +145,7 @@ namespace Chatapp_P2P
                         if (target == null || target.Id != from.Id)
                             item.Count += 1;
                     }
+                    NotifyMessage(from.Name, $"Đã gửi hình ảnh");
                     chatlist.AddToBottom(new TextChatItem("data:image/png;base64," + obj.Message, Resources._464760996_1254146839119862_3605321457742435801_n, from.Name) { Me = false });
                 }
                 else if (obj.Type == "file")
@@ -161,6 +163,7 @@ namespace Chatapp_P2P
                             item.Count += 1;
                     }
                     chatlist.AddToBottom(new TextChatItem($"📎 {Path.GetFileName(fileName)} (đã gửi)", null, myInfo.Name) { Me = false });
+                    NotifyMessage(from.Name, $"Đã gửi tệp tin: {obj.Note}");
                     AntdUI.Modal.open(new Modal.Config(this, "Xác nhận", $"{from.Name} muốn gửi cho bạn tệp tin: {obj.Note}", AntdUI.TType.Info)
                     {
                         CancelText = "No",
@@ -204,6 +207,10 @@ namespace Chatapp_P2P
             {
                 AntdUI.Message.info(this, $"[Error] {ex.Message}", Font);
             }
+        }
+        private void NotifyMessage(string from, string message)
+        {
+            AntdUI.Notification.info(this, $"Bạn có tin nhắn từ: {from}", message, TAlignFrom.BR, Font);
         }
         private bool ContainUser(User user)
         {

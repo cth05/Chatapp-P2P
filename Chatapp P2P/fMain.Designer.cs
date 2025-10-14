@@ -39,13 +39,13 @@
             this.lbPort = new System.Windows.Forms.ToolStripStatusLabel();
             this.msgList = new AntdUI.Chat.MsgList();
             this.pnlToolChat = new AntdUI.Panel();
+            this.btnSendImage = new AntdUI.Button();
             this.btnUpload = new AntdUI.Button();
             this.btnSend = new AntdUI.Button();
-            this.txtInput = new AntdUI.Input();
             this.pnlChatInfo = new AntdUI.Panel();
             this.lbTarget = new AntdUI.Label();
             this.pnlChat = new AntdUI.Panel();
-            this.btnSendImage = new AntdUI.Button();
+            this.txtInput = new AntdUI.Input();
             this.pnlUser.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.pnlToolChat.SuspendLayout();
@@ -152,10 +152,10 @@
             // 
             // pnlToolChat
             // 
+            this.pnlToolChat.Controls.Add(this.txtInput);
             this.pnlToolChat.Controls.Add(this.btnSendImage);
             this.pnlToolChat.Controls.Add(this.btnUpload);
             this.pnlToolChat.Controls.Add(this.btnSend);
-            this.pnlToolChat.Controls.Add(this.txtInput);
             this.pnlToolChat.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlToolChat.Enabled = false;
             this.pnlToolChat.Location = new System.Drawing.Point(328, 441);
@@ -165,6 +165,21 @@
             this.pnlToolChat.TabIndex = 2;
             this.pnlToolChat.Text = "panel2";
             this.pnlToolChat.Visible = false;
+            // 
+            // btnSendImage
+            // 
+            this.btnSendImage.BackExtend = "";
+            this.btnSendImage.ColorScheme = AntdUI.TAMode.Light;
+            this.btnSendImage.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnSendImage.IconRatio = 1.5F;
+            this.btnSendImage.IconSvg = "FileImageOutlined";
+            this.btnSendImage.Location = new System.Drawing.Point(367, 0);
+            this.btnSendImage.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSendImage.Name = "btnSendImage";
+            this.btnSendImage.Size = new System.Drawing.Size(54, 68);
+            this.btnSendImage.TabIndex = 5;
+            this.btnSendImage.Type = AntdUI.TTypeMini.Primary;
+            this.btnSendImage.Click += new System.EventHandler(this.btnSendImage_Click);
             // 
             // btnUpload
             // 
@@ -196,17 +211,6 @@
             this.btnSend.TabIndex = 3;
             this.btnSend.Type = AntdUI.TTypeMini.Primary;
             this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
-            // 
-            // txtInput
-            // 
-            this.txtInput.Dock = System.Windows.Forms.DockStyle.Left;
-            this.txtInput.Location = new System.Drawing.Point(0, 0);
-            this.txtInput.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.txtInput.Multiline = true;
-            this.txtInput.Name = "txtInput";
-            this.txtInput.PlaceholderText = "Nhập tin nhắn";
-            this.txtInput.Size = new System.Drawing.Size(365, 68);
-            this.txtInput.TabIndex = 0;
             // 
             // pnlChatInfo
             // 
@@ -247,20 +251,16 @@
             this.pnlChat.TabIndex = 4;
             this.pnlChat.Text = "panel2";
             // 
-            // btnSendImage
+            // txtInput
             // 
-            this.btnSendImage.BackExtend = "";
-            this.btnSendImage.ColorScheme = AntdUI.TAMode.Light;
-            this.btnSendImage.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnSendImage.IconRatio = 1.5F;
-            this.btnSendImage.IconSvg = "FileImageOutlined";
-            this.btnSendImage.Location = new System.Drawing.Point(367, 0);
-            this.btnSendImage.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnSendImage.Name = "btnSendImage";
-            this.btnSendImage.Size = new System.Drawing.Size(54, 68);
-            this.btnSendImage.TabIndex = 5;
-            this.btnSendImage.Type = AntdUI.TTypeMini.Primary;
-            this.btnSendImage.Click += new System.EventHandler(this.btnSendImage_Click);
+            this.txtInput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtInput.Location = new System.Drawing.Point(0, 0);
+            this.txtInput.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtInput.Multiline = true;
+            this.txtInput.Name = "txtInput";
+            this.txtInput.PlaceholderText = "Nhập tin nhắn";
+            this.txtInput.Size = new System.Drawing.Size(367, 68);
+            this.txtInput.TabIndex = 6;
             // 
             // fMain
             // 
@@ -295,7 +295,6 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private AntdUI.Chat.MsgList msgList;
         private AntdUI.Panel pnlToolChat;
-        private AntdUI.Input txtInput;
         private AntdUI.Button btnSend;
         private AntdUI.Button btnUpload;
         private AntdUI.Panel pnlChatInfo;
@@ -308,5 +307,6 @@
         private System.Windows.Forms.ToolStripStatusLabel lbPort;
         private AntdUI.Button btnConnect;
         private AntdUI.Button btnSendImage;
+        private AntdUI.Input txtInput;
     }
 }
