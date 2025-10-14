@@ -27,17 +27,16 @@ namespace Chatapp_P2P
             InitializeComponent();
         }
         Chatapp_P2P.Core.ChatSockets sockets;
-        User target,myInfo;
+        User target, myInfo;
         Dictionary<User, ChatList> userChatList = new Dictionary<User, ChatList>();
-        Dictionary<string, string> pairsConnectListenPort = new Dictionary<string, string>();
-        private void fMain_Load(object sender, EventArgs e)
+        private async void fMain_Load(object sender, EventArgs e)
         {
+            await Task.Delay(500);
             fGetPortOpen f = new fGetPortOpen();
-            f.ShowDialog(); sockets = new ChatSockets();
-            sockets.MessageReceived += OnMessageReceived;
-            sockets.StatusChanged += OnStatusReceived;
-            sockets.PeerChanged += OnPeerReceived;
+            f.ShowDialog(this);
+            sockets = new ChatSockets();
             lbIP.Text = f.ip;
+            this.pageHeader1.SubText = f.name;
             lbPort.Text = f.port.ToString();
             sockets.Start(f.port);
             myInfo = new User
@@ -46,6 +45,9 @@ namespace Chatapp_P2P
                 Name = f.name,
                 Endpoint = f.ip + ":" + f.port
             };
+            sockets.MessageReceived += OnMessageReceived;
+            sockets.StatusChanged += OnStatusReceived;
+            sockets.PeerChanged += OnPeerReceived;
         }
         private void OnPeerReceived(string type, string endpoint)
         {
@@ -63,22 +65,33 @@ namespace Chatapp_P2P
             }
             else if (type == "delete")
             {
-                User userDelete=null;
+                User userDelete = null;
                 foreach (var item in userChatList)
                 {
                     if (item.Key.Endpoint == endpoint)
                     {
                         userDelete = item.Key;
+                        var chatlist = userChatList[item.Key];
+                        chatlist.Visible = false;
                         userChatList.Remove(item.Key);
                         break;
                     }
                 }
                 foreach (var item in msgList.Items)
                 {
-                    if(item.ID == userDelete.Id)
+                    if (item.ID == userDelete.Id)
                     {
+                        item.Text = "offline";
                         item.Visible = false;
+                        msgList.Items.Remove(item);
                     }
+                }
+                if (userDelete == target)
+                {
+                    lbTarget.Text = "";
+                    pnlChatInfo.Visible = false;
+                    pnlToolChat.Visible = false;
+                    pnlToolChat.Enabled = false;
                 }
             }
         }
@@ -99,8 +112,8 @@ namespace Chatapp_P2P
                 sockets.MergeIPPort(endpoint, obj.From.Endpoint);
                 if (obj.Type == "chat")
                 {
-                    User from =obj.From;
-                    var existingUser = userChatList.Keys.FirstOrDefault(u=>u.Id == obj.From.Id);
+                    User from = obj.From;
+                    var existingUser = userChatList.Keys.FirstOrDefault(u => u.Id == obj.From.Id);
                     ChatList chatlist = userChatList[existingUser];
                     chatlist.AddToBottom(new TextChatItem(obj.Message, Resources._464760996_1254146839119862_3605321457742435801_n, from.Name));
                     var item = msgList.Items.FirstOrDefault(i => i.ID == from.Id);
@@ -133,7 +146,7 @@ namespace Chatapp_P2P
                     }
                     chatlist.AddToBottom(new TextChatItem("data:image/png;base64," + obj.Message, Resources._464760996_1254146839119862_3605321457742435801_n, from.Name) { Me = false });
                 }
-                else if(obj.Type == "file")
+                else if (obj.Type == "file")
                 {
                     string fileName = obj.Note;
                     User from = obj.From;
@@ -218,25 +231,25 @@ namespace Chatapp_P2P
         }
         private void msgList_ItemClick(object sender, AntdUI.MsgItemClickEventArgs e)
         {
-            if(e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
             {
                 e.Item.Select = true;
                 target = FindUserFromID(e.Item.ID);
                 lbTarget.Text = $"Tên:{target.Name}-Endpoint Listener:{target.Endpoint}";
                 ChatList chatlist;
-                if(!userChatList.TryGetValue(target, out chatlist))
+                if (!userChatList.TryGetValue(target, out chatlist))
                 {
                     AntdUI.Message.error(this, $"Không tìm thấy user {e.Item.ID}", Font);
                 }
                 foreach (var item in userChatList)
                 {
-                    if(item.Key.Id != target.Id)
+                    if (item.Key.Id != target.Id)
                     {
                         item.Value.Visible = false;
                         item.Value.Enabled = false;
                         continue;
                     }
-                    item.Value.Visible = item.Value.Enabled= true;
+                    item.Value.Visible = item.Value.Enabled = true;
                 }
                 e.Item.Count = 0;
                 pnlToolChat.Enabled = pnlToolChat.Visible = true;
@@ -262,7 +275,7 @@ namespace Chatapp_P2P
                 From = myInfo,
                 To = target,
                 Message = text,
-                Note=""
+                Note = ""
             };
             string rawMsgSend = JsonConvert.SerializeObject(msgObj, Formatting.None);
             try
@@ -291,11 +304,11 @@ namespace Chatapp_P2P
                 ofd.Filter = "Ảnh|*.png;*.jpg;*.jpeg;*.gif";
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    SendImage(target, ofd.FileName, "image");
+                    SendImage(target, ofd.FileName);
                 }
             }
         }
-        private void SendImage(User target, string filePath, string type)
+        private void SendImage(User target, string filePath)
         {
             try
             {
@@ -304,7 +317,7 @@ namespace Chatapp_P2P
 
                 ChatMessage msgObj = new ChatMessage
                 {
-                    Type = type,
+                    Type = "image",
                     From = myInfo,
                     To = target,
                     Note = Path.GetFileName(filePath),
@@ -315,10 +328,9 @@ namespace Chatapp_P2P
                 sockets.SendMessage(target.Endpoint, raw);
                 if (userChatList.TryGetValue(target, out ChatList chatlist))
                 {
-                    Image img;
-                    using (var ms = new MemoryStream(bytes))
-                        img = Image.FromStream(ms);
                     chatlist.AddToBottom(new TextChatItem("data:image/png;base64," + base64, Resources._464760996_1254146839119862_3605321457742435801_n, myInfo.Name) { Me = true });
+                    AntdUI.Message.error(this, $"Gửi hình ảnh thành công", Font);
+
                 }
             }
             catch (Exception ex)
@@ -326,7 +338,7 @@ namespace Chatapp_P2P
                 AntdUI.Message.error(this, $"Không gửi được file: {ex.Message}", Font);
             }
         }
-        private void SendFile(User target, string filePath, string type)
+        private void SendFile(User target, string filePath)
         {
             try
             {
@@ -335,7 +347,7 @@ namespace Chatapp_P2P
 
                 ChatMessage msgObj = new ChatMessage
                 {
-                    Type = type,
+                    Type = "file",
                     From = myInfo,
                     To = target,
                     Note = Path.GetFileName(filePath),
@@ -347,6 +359,7 @@ namespace Chatapp_P2P
                 if (userChatList.TryGetValue(target, out ChatList chatlist))
                 {
                     chatlist.AddToBottom(new TextChatItem($"📎 {Path.GetFileName(filePath)} (đã gửi)", null, myInfo.Name) { Me = true });
+                    AntdUI.Message.error(this, $"Gửi tệp tin thành công", Font);
                 }
             }
             catch (Exception ex)
@@ -360,14 +373,25 @@ namespace Chatapp_P2P
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    SendFile(target, ofd.FileName, "file");
+                    AntdUI.Modal.open(new Modal.Config(this, $"Xác nhận gửi tệp tin [{ofd.FileName}]", "", AntdUI.TType.Info)
+                    {
+                        CancelText = "No",
+                        OkText = "Yes",
+                        OnOk = config =>
+                        {
+                            SendFile(target, ofd.FileName);
+                            return true;
+                        },
+                    });
                 }
             }
         }
         private void button1_Click(object sender, EventArgs e)
         {
             fConnect f = new fConnect();
-            f.ShowDialog();
+            f.ShowDialog(this);
+            if (string.IsNullOrEmpty(f.ip) || string.IsNullOrEmpty(f.port.ToString()))
+                return;
             string ip = f.ip;
             int port = f.port;
             sockets.ConnectToPeer(ip, port);
